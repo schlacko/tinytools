@@ -2,12 +2,12 @@
 
 A random collection of small shell scripts I use daily.
 
-Mostly built around:
+Built around a minimal Linux setup with:
 
 * rofi
 * polybar
-* bash
-* and whatever else was installed at the time
+* window managers like i3 / openbox
+* and a lot of "good enough" bash
 
 ---
 
@@ -19,58 +19,70 @@ Scripts were written:
 
 * quickly
 * for my own setup
-* with zero intention of being portable
+* without portability in mind
 
 You will find:
 
 * hardcoded paths
-* missing error handling
-* questionable decisions
-* "I'll fix this later" energy
+* missing checks
+* janky logic
+* pure trial-and-error solutions
 
-If something breaks → that's expected.
+If it breaks → it's working as intended.
 
 ---
 
 ## ✨ What’s inside?
 
-A bunch of tiny utilities, for example:
+Small utilities like:
 
-* 🚀 rofi app launchers
-* 🔌 power menu (shutdown, reboot, etc.)
-* ⏱ polybar time tracking / usage counter
-* 🍅 a minimal pomodoro timer
-* 🔊 small system helpers
-* …and other random scripts
+* 🚀 rofi launchers
+* 🔌 power menu
+* ⏱ polybar usage/time tracker
+* 🍅 simple pomodoro timer
+* 🌐 quick network helpers
+* 📸 screenshot scripts
+* and other tiny hacks
 
-Nothing here is big or complex — just small tools that make everyday usage smoother.
+Each script solves one specific problem. Nothing more.
 
 ---
 
-## ⚙️ Requirements
+## ⚙️ Dependencies
 
-Most scripts assume you have:
+Most scripts rely on the following tools being installed:
+
+### Core
 
 * `bash`
 * `rofi`
 * `polybar`
 * `notify-send`
-* standard Linux utilities
 
-Some scripts may also depend on:
+### System / WM
 
-* `playerctl`
-* `amixer` / `pactl`
-* `xrandr`
-* etc.
+* `i3` or `openbox`
+* `setxkbmap`
 
-👉 If something doesn’t work, check the script.
+### Utilities
+
+* `curl`
+* `wget`
+* `scrot`
+* `dmenu`
+
+### Arch-specific (optional)
+
+* `checkupdates`
+
+👉 Not all scripts need all dependencies.
+👉 If something breaks, open the script and see what it expects.
 
 ---
 
 ## 🚀 Usage
 
-There is no unified interface.
+No unified interface.
 
 Most scripts are just:
 
@@ -78,58 +90,64 @@ Most scripts are just:
 ./script.sh
 ```
 
-Some are meant to be:
+Others are meant to be:
 
-* called from polybar
+* triggered from polybar
 * bound to hotkeys
-* launched via rofi
+* used inside rofi menus
 
 ---
 
-## 🛠 Setup (if you really want to use this)
+## 🛠 Setup
+
+If you actually want to use this:
 
 1. Clone the repo
-2. Open the scripts you care about
-3. Fix:
+2. Pick a script
+3. Read it (seriously)
+4. Fix:
 
    * paths
    * commands
-   * configs
-4. Plug them into your setup
+   * assumptions
+5. Integrate it into your setup
 
-Example:
+Examples:
 
-* bind a script to a key in your WM
-* call it from polybar
-* hook it into rofi
+* bind to a key in i3
+* call from polybar module
+* wrap in rofi menu
 
 ---
 
 ## 🧠 Philosophy
 
-Small > big
-Simple > perfect
-Working > correct
+* small > complex
+* fast > clean
+* working > correct
 
-These scripts exist to:
+These scripts exist to remove tiny annoyances from daily workflow.
 
-* save a few seconds
-* reduce friction
-* automate annoying stuff
-
-That’s it.
+Nothing here is meant to be perfect.
 
 ---
 
 ## 🤝 Contributing
 
-Not really the goal, but if you:
+Not really the point of this repo, but:
 
-* improve something
-* fix a bug
-* or have a cool tiny script
+* PRs are welcome
+* improvements are cool
+* overengineering is not
 
-feel free to open a PR.
+---
+
+## 📜 License
+
+Do whatever you want with this.
+
+No guarantees, no promises.
+
 
 ---
 

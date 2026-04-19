@@ -148,11 +148,3 @@ Do whatever you want with this.
 
 No guarantees, no promises.
 
-
----
-
-## 📜 License
-
-Use whatever you want, break whatever you want.
-
-No guarantees.

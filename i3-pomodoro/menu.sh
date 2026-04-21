@@ -8,7 +8,7 @@ STATUS_FILE="/tmp/pomodoro_status"
 ROFI_CMD="rofi -dmenu -i -p "
 
 # Opciók
-OPTIONS="󰐊 Indítás (25+5)\n󰒓 Egyéni mód\n󰏤 Szünet / Folytatás\n󰦛 Reset / Stop"
+OPTIONS="󰐊 Indítás (25 5 15)\n󰒓 Egyéni mód\n󰏤 Szünet / Folytatás\n󰦛 Reset / Stop"
 
 # Választás bekérése
 CHOICE=$(echo -e "$OPTIONS" | $ROFI_CMD)

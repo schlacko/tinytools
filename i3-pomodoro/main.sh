@@ -3,6 +3,7 @@
 # Argumentumok kezelése
 WORK_MINS=${1:-25}
 BREAK_MINS=${2:-5}
+LONG_BREAK_MINS=${3:-15}
 STATUS_FILE="/tmp/pomodoro_status"
 COMPLETED_COUNT=0
 ICON="" # Győződj meg róla, hogy a Nerd Fontod látja
@@ -29,11 +30,13 @@ while true; do
   done
 
   # --- SZÜNET SZAKASZ ---
-  echo "󱐋 SZÜNET 󱐋" >$STATUS_FILE
-
-  # Kitty indítása teljes képernyőn az i3wm alatt
-  # A --start-as=fullscreen kapcsoló natívan működik kitty-ben
-  kitty --start-as=fullscreen --title "POMODORO_BREAK" /home/sefy/Applications/shell/i3-pomodoro/break.sh $BREAK_MINS
+  if ((COMPLETED_COUNT > 0 && COMPLETED_COUNT % 4 == 0)); then
+    echo "󱐋 HOSSZÚ SZÜNET 󱐋" >$STATUS_FILE
+    kitty --start-as=fullscreen --title "POMODORO_BREAK" /home/sefy/Applications/shell/i3-pomodoro/break.sh $LONG_BREAK_MINS
+  else
+    echo "󱐋 SZÜNET 󱐋" >$STATUS_FILE
+    kitty --start-as=fullscreen --title "POMODORO_BREAK" /home/sefy/Applications/shell/i3-pomodoro/break.sh $BREAK_MINS
+  fi
   # --- AKTIVITÁS VÁRÁSA SZÜNET UTÁN ---
 
   # 1) várjuk meg, hogy a rendszer idle legyen (pl. break közben ne legyen input)

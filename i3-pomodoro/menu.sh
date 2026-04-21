@@ -19,16 +19,18 @@ case "$CHOICE" in
   bash "$POMO_SCRIPT" 25 5 &
   ;;
 *"Egyéni mód")
-  # Munkaidő bekérése
-  WORK=$(rofi -dmenu -p "Munkaidő (perc)")
-  [[ -z "$WORK" || ! "$WORK" =~ ^[0-9]+$ ]] && exit
-
-  # Szünidő bekérése
-  BREAK=$(rofi -dmenu -p "Szünidő (perc)")
-  [[ -z "$BREAK" || ! "$BREAK" =~ ^[0-9]+$ ]] && exit
+  # Munkaidő, szünet, hosszú szünet bekérése egy sorban
+  INPUT=$(rofi -dmenu -p "Munka, szünet, hosszú szünet (pl. 25 5 15)")
+  # Ellenőrzés és feldolgozás
+  if [[ ! "$INPUT" =~ ^[0-9]+\ [0-9]+\ [0-9]+$ ]]; then
+    exit
+  fi
+  WORK=$(echo "$INPUT" | awk '{print $1}')
+  BREAK=$(echo "$INPUT" | awk '{print $2}')
+  LONG_BREAK=$(echo "$INPUT" | awk '{print $3}')
 
   pkill -f "bash $POMO_SCRIPT"
-  bash "$POMO_SCRIPT" "$WORK" "$BREAK" &
+  bash "$POMO_SCRIPT" "$WORK" "$BREAK" "$LONG_BREAK" &
   ;;
 *"Szünet / Folytatás")
   PID=$(pgrep -f "bash $POMO_SCRIPT")

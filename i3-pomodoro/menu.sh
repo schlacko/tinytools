@@ -14,7 +14,7 @@ OPTIONS="󰐊 Indítás (25 5 15)\n󰒓 Egyéni mód\n󰏤 Szünet / Folytatás\
 CHOICE=$(echo -e "$OPTIONS" | $ROFI_CMD)
 
 case "$CHOICE" in
-*"Indítás (25+5)")
+*"Indítás (25 5 15)")
   pkill -f "bash $POMO_SCRIPT"
   bash "$POMO_SCRIPT" 25 5 15 &
   ;;

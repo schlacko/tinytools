@@ -16,7 +16,7 @@ CHOICE=$(echo -e "$OPTIONS" | $ROFI_CMD)
 case "$CHOICE" in
 *"Indítás (25+5)")
   pkill -f "bash $POMO_SCRIPT"
-  bash "$POMO_SCRIPT" 25 5 &
+  bash "$POMO_SCRIPT" 25 5 15 &
   ;;
 *"Egyéni mód")
   # Munkaidő, szünet, hosszú szünet bekérése egy sorban

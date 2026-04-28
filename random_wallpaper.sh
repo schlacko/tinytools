@@ -1,23 +1,20 @@
 #!/bin/bash
 
 # --- BEÁLLÍTÁSOK ---
-# Az alapértelmezett háttérkép, ha nincs net vagy hiba történik
 DEFAULT_IMG="$HOME/.config/backgrounds/00_minimal_black_arch.png"
-# Ideiglenes fájl a letöltött képnek
 TMP_IMG="/tmp/i3_wallpaper.jpg"
-# A monitorod szélessége (pixelben) a Wikimedia átméretezőjéhez
+INFO_FILE="/tmp/current_wallpaper_info.txt"
 RESOLUTION_WIDTH="1600"
+API_URL="https://commons.wikimedia.org/w/api.php"
 
 # --- 1. INTERNETKAPCSOLAT ELLENŐRZÉSE ---
-# A Google DNS (8.8.8.8) pingelése 2 másodperces időkorláttal
 if ! ping -q -c 1 -W 2 8.8.8.8 >/dev/null 2>&1; then
-  # Nincs internet, beállítjuk az alapértelmezett képet
   feh --bg-fill "$DEFAULT_IMG"
+  echo "Nincs internet." >"$INFO_FILE"
   exit 0
 fi
 
-# --- 2. URL LISTA (Közvetlenül a szkriptben) ---
-# Ide (a két EOF közé) másold be az összes URL-t a fájlodból!
+# --- 2. URL LISTA ---
 URL_LIST=$(
   cat <<'EOF'
 https://commons.wikimedia.org/wiki/Commons:Wiki_Loves_Earth_2025/Winners#/media/File%3AGebel_Ciantar.jpg
@@ -561,24 +558,58 @@ https://commons.wikimedia.org/wiki/Commons:Wiki_Loves_Earth_2025/Winners#/media/
 EOF
 )
 
-# --- 3. VÉLETLENSZERŰ URL KIVÁLASZTÁSA ---
-# Kiszűrjük az esetleges üres sorokat, majd sorsolunk egyet
+# --- 3. VÉLETLENSZERŰ VÁLASZTÁS ÉS DEKÓDOLÁS ---
 RANDOM_URL=$(echo "$URL_LIST" | grep -v '^\s*$' | shuf -n 1)
+# Kinyerjük a nyers, esetenként kódolt fájlnevet
+RAW_FILENAME=$(echo "$RANDOM_URL" | grep -oP 'File(%3A|:)\K.*')
 
-# --- 4. FÁJLNÉV KINYERÉSE AZ URL-BŐL ---
-FILENAME=$(echo "$RANDOM_URL" | grep -oP 'File(%3A|:)\K.*')
-
-if [ -z "$FILENAME" ]; then
+if [ -z "$RAW_FILENAME" ]; then
   feh --bg-fill "$DEFAULT_IMG"
   exit 1
 fi
 
-# --- 5. KÖZVETLEN KÉP-URL LÉTREHOZÁSA ---
-DIRECT_URL="https://commons.wikimedia.org/wiki/Special:FilePath/${FILENAME}?width=${RESOLUTION_WIDTH}"
+# !!! A JAVÍTÁS ITT VAN !!!
+# URL kódolás visszafejtése (pl. %28 -> (, %20 -> szóköz) az API lekérdezéshez
+DECODED_FILENAME=$(printf '%b' "${RAW_FILENAME//%/\\x}")
 
-# --- 6. LETÖLTÉS ÉS BEÁLLÍTÁS ---
+# --- 4. API LEKÉRDEZÉS (Metaadatok) ---
+# Itt már a tiszta, emberi olvasásra alkalmas nevet (DECODED_FILENAME) adjuk át
+RESPONSE=$(curl -s -G "$API_URL" \
+  --data-urlencode "action=query" \
+  --data-urlencode "format=json" \
+  --data-urlencode "prop=imageinfo" \
+  --data-urlencode "iiprop=extmetadata|user" \
+  --data-urlencode "titles=File:$DECODED_FILENAME")
+
+# Adatok kinyerése
+AUTHOR=$(echo "$RESPONSE" | jq -r '.query.pages[].imageinfo[0].extmetadata.Artist.value // "Ismeretlen"' | sed 's/<[^>]*>//g')
+LICENSE=$(echo "$RESPONSE" | jq -r '.query.pages[].imageinfo[0].extmetadata.LicenseShortName.value // "n.a."')
+DESCRIPTION=$(echo "$RESPONSE" | jq -r '.query.pages[].imageinfo[0].extmetadata.ImageDescription.value // "Nincs leírás"' | sed 's/<[^>]*>//g' | head -c 100)
+CAMERA=$(echo "$RESPONSE" | jq -r '.query.pages[].imageinfo[0].extmetadata.Model.value // "Ismeretlen gép"')
+
+# --- 5. LETÖLTÉS ÉS BEÁLLÍTÁS ---
+# A letöltéshez (wget) marad a RAW változat, mert a szerverek azt szeretik
+DIRECT_URL="https://commons.wikimedia.org/wiki/Special:FilePath/${RAW_FILENAME}?width=${RESOLUTION_WIDTH}"
+
 if wget -q -O "$TMP_IMG" "$DIRECT_URL"; then
   feh --bg-fill "$TMP_IMG"
+
+  # --- 6. MENTÉS A TMP FÁJLBA ---
+  {
+    echo "=== JELENLEGI HÁTTÉRKÉP ==="
+    echo "Cím: $DECODED_FILENAME"
+    echo "Szerző: $AUTHOR"
+    echo "Licenc: $LICENSE"
+    echo "Kamera: $CAMERA"
+    echo "Leírás: $DESCRIPTION..."
+    # Opcionálisan kicseréljük a szóközöket aláhúzásra, hogy kattintható maradjon a terminálban
+    echo "Link: https://commons.wikimedia.org/wiki/File:${DECODED_FILENAME// /_}"
+    echo "Dátum: $(date '+%Y-%m-%d %H:%M:%S')"
+  } >"$INFO_FILE"
+
+  # --- 7. ÉRTESÍTÉS ---
+  # notify-send -u normal "Új háttérkép beállítva" "📷 $AUTHOR\n⚙️ $CAMERA\n⚖️ $LICENSE" -i "$TMP_IMG"
 else
   feh --bg-fill "$DEFAULT_IMG"
+  echo "Hiba a letöltés során." >"$INFO_FILE"
 fi

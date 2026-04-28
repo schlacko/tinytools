@@ -1,8 +1,8 @@
 [Desktop Entry]
 Type=Application
-Name=Wallpaper Info (vi)
+Name=Wallpaper Info
 Comment=A jelenlegi háttérkép adatainak megnyitása vi-ben
-Exec=vi /tmp/current_wallpaper_info.txt
+Exec=less /tmp/current_wallpaper_info.txt
 Terminal=true
 Icon=text-x-generic
 Categories=Utility;TextEditor;

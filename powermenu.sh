@@ -29,11 +29,11 @@ logout() {
 
 lock() {
   if [ "$MODE" = "wayland" ]; then
-    # Wayland lock (KÖTELEZŐ)
-    if command -v swaylock &>/dev/null; then
-      swaylock
+    # Wayland lock (wlock)
+    if command -v wlock &>/dev/null; then
+      wlock
     else
-      notify-send "swaylock nincs telepítve"
+      notify-send "wlock nincs telepítve"
     fi
   else
     # X11 lock

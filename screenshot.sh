@@ -9,16 +9,16 @@ CHOICE=$(echo -e "Képernyő\nTerület\nAblak" | dmenu -i -p "Screenshot")
 
 # Futas
 case "$CHOICE" in
-  "Képernyő")
-    scrot "$NAME" -e "xclip -selection clipboard -t image/png -i \$f; mv \$f $DIR"
-    ;;
-  "Terület")
-    scrot -s -f "$NAME" -e "xclip -selection clipboard -t image/png -i \$f; mv \$f $DIR"
-    ;;
-  "Ablak")
-    scrot -u "$NAME" -e "xclip -selection clipboard -t image/png -i \$f; mv \$f $DIR"
-    ;;
-  *)
-    exit 0
-    ;;
+"Képernyő")
+  scrot "$NAME" -e "xclip -selection clipboard -t image/png -i \$f; mv \$f $DIR"
+  ;;
+"Terület")
+  scrot -s -f "$NAME" -e "xclip -selection clipboard -t image/png -i \$f; mv \$f $DIR"
+  ;;
+"Ablak")
+  scrot -u "$NAME" -e "xclip -selection clipboard -t image/png -i \$f; mv \$f $DIR"
+  ;;
+*)
+  exit 0
+  ;;
 esac

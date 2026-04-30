@@ -2,14 +2,31 @@
 
 # --- BEÁLLÍTÁSOK ---
 DEFAULT_IMG="$HOME/.config/backgrounds/00_minimal_black_arch.png"
-TMP_IMG="/tmp/i3_wallpaper.jpg"
+TMP_IMG="/tmp/wallpaper.jpg"
 INFO_FILE="/tmp/current_wallpaper_info.txt"
 RESOLUTION_WIDTH="1600"
 API_URL="https://commons.wikimedia.org/w/api.php"
 
-# --- 1. INTERNETKAPCSOLAT ELLENŐRZÉSE ---
+# --- DETEKTÁLÁS ---
+if [ "$XDG_SESSION_TYPE" = "wayland" ]; then
+  MODE="wayland"
+else
+  MODE="x11"
+fi
+
+# --- WALLPAPER SET FUNCTION ---
+set_wallpaper() {
+  if [ "$MODE" = "wayland" ]; then
+    pkill swaybg 2>/dev/null
+    swaybg -i "$1" -m fill &
+  else
+    feh --bg-fill "$1"
+  fi
+}
+
+# --- INTERNET CHECK ---
 if ! ping -q -c 1 -W 2 8.8.8.8 >/dev/null 2>&1; then
-  feh --bg-fill "$DEFAULT_IMG"
+  set_wallpaper "$DEFAULT_IMG"
   echo "Nincs internet." >"$INFO_FILE"
   exit 0
 fi
@@ -558,58 +575,46 @@ https://commons.wikimedia.org/wiki/Commons:Wiki_Loves_Earth_2025/Winners#/media/
 EOF
 )
 
-# --- 3. VÉLETLENSZERŰ VÁLASZTÁS ÉS DEKÓDOLÁS ---
+# --- RANDOM PICK ---
 RANDOM_URL=$(echo "$URL_LIST" | grep -v '^\s*$' | shuf -n 1)
-# Kinyerjük a nyers, esetenként kódolt fájlnevet
 RAW_FILENAME=$(echo "$RANDOM_URL" | grep -oP 'File(%3A|:)\K.*')
 
 if [ -z "$RAW_FILENAME" ]; then
-  feh --bg-fill "$DEFAULT_IMG"
+  set_wallpaper "$DEFAULT_IMG"
   exit 1
 fi
 
-# !!! A JAVÍTÁS ITT VAN !!!
-# URL kódolás visszafejtése (pl. %28 -> (, %20 -> szóköz) az API lekérdezéshez
 DECODED_FILENAME=$(printf '%b' "${RAW_FILENAME//%/\\x}")
 
-# --- 4. API LEKÉRDEZÉS (Metaadatok) ---
-# Itt már a tiszta, emberi olvasásra alkalmas nevet (DECODED_FILENAME) adjuk át
+# --- META ---
 RESPONSE=$(curl -s -G "$API_URL" \
   --data-urlencode "action=query" \
   --data-urlencode "format=json" \
   --data-urlencode "prop=imageinfo" \
-  --data-urlencode "iiprop=extmetadata|user" \
+  --data-urlencode "iiprop=extmetadata" \
   --data-urlencode "titles=File:$DECODED_FILENAME")
 
-# Adatok kinyerése
 AUTHOR=$(echo "$RESPONSE" | jq -r '.query.pages[].imageinfo[0].extmetadata.Artist.value // "Ismeretlen"' | sed 's/<[^>]*>//g')
 LICENSE=$(echo "$RESPONSE" | jq -r '.query.pages[].imageinfo[0].extmetadata.LicenseShortName.value // "n.a."')
 DESCRIPTION=$(echo "$RESPONSE" | jq -r '.query.pages[].imageinfo[0].extmetadata.ImageDescription.value // "Nincs leírás"' | sed 's/<[^>]*>//g' | head -c 100)
-CAMERA=$(echo "$RESPONSE" | jq -r '.query.pages[].imageinfo[0].extmetadata.Model.value // "Ismeretlen gép"')
 
-# --- 5. LETÖLTÉS ÉS BEÁLLÍTÁS ---
-# A letöltéshez (wget) marad a RAW változat, mert a szerverek azt szeretik
+# --- DOWNLOAD ---
 DIRECT_URL="https://commons.wikimedia.org/wiki/Special:FilePath/${RAW_FILENAME}?width=${RESOLUTION_WIDTH}"
 
 if wget -q -O "$TMP_IMG" "$DIRECT_URL"; then
-  feh --bg-fill "$TMP_IMG"
 
-  # --- 6. MENTÉS A TMP FÁJLBA ---
+  set_wallpaper "$TMP_IMG"
+
   {
-    echo "=== JELENLEGI HÁTTÉRKÉP ==="
+    echo "=== HÁTTÉRKÉP ==="
     echo "Cím: $DECODED_FILENAME"
     echo "Szerző: $AUTHOR"
     echo "Licenc: $LICENSE"
-    echo "Kamera: $CAMERA"
     echo "Leírás: $DESCRIPTION..."
-    # Opcionálisan kicseréljük a szóközöket aláhúzásra, hogy kattintható maradjon a terminálban
-    echo "Link: https://commons.wikimedia.org/wiki/File:${DECODED_FILENAME// /_}"
     echo "Dátum: $(date '+%Y-%m-%d %H:%M:%S')"
   } >"$INFO_FILE"
 
-  # --- 7. ÉRTESÍTÉS ---
-  # notify-send -u normal "Új háttérkép beállítva" "📷 $AUTHOR\n⚙️ $CAMERA\n⚖️ $LICENSE" -i "$TMP_IMG"
 else
-  feh --bg-fill "$DEFAULT_IMG"
+  set_wallpaper "$DEFAULT_IMG"
   echo "Hiba a letöltés során." >"$INFO_FILE"
 fi

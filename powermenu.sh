@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# ---- Rofi Powermenu (i3 + Openbox kompatibilis, hibakezeléssel) ----
-
-# Menüelemek
 options=(
   "Lock Screen"
   "Logout"
@@ -12,61 +9,68 @@ options=(
   "Cancel"
 )
 
-# Rofi megjelenítés
-chosen=$(printf '%s\n' "${options[@]}" | rofi -dmenu -i -p "Power Menu" -theme-str 'window {width: 20em;}')
+chosen=$(printf '%s\n' "${options[@]}" | rofi -dmenu -i -p "Power Menu" \
+  -theme-str 'window {width: 20em;}')
 
-# Kijelentkezés függvény
+if [ "$XDG_SESSION_TYPE" = "wayland" ]; then
+  MODE="wayland"
+else
+  MODE="x11"
+fi
+
 logout() {
-  # i3 kilépés (ha fut)
-  if command -v i3-msg &>/dev/null && pgrep -x i3 >/dev/null; then
-    i3-msg exit 2>/dev/null || true
-  fi
-
-  # Openbox kilépés (ha fut)
-  if command -v openbox &>/dev/null && pgrep -x openbox >/dev/null; then
-    openbox --exit 2>/dev/null || true
+  if [ "$MODE" = "wayland" ]; then
+    swaymsg exit
+  else
+    pkill i3 2>/dev/null || true
+    pkill openbox 2>/dev/null || true
   fi
 }
 
-# Biztosítási függvény (y/n)
+lock() {
+  if [ "$MODE" = "wayland" ]; then
+    # Wayland lock (KÖTELEZŐ)
+    if command -v swaylock &>/dev/null; then
+      swaylock
+    else
+      notify-send "swaylock nincs telepítve"
+    fi
+  else
+    # X11 lock
+    if command -v slock &>/dev/null; then
+      slock
+    else
+      notify-send "slock nincs telepítve"
+    fi
+  fi
+}
+
 confirm() {
   rofi -dmenu -p "$1 (y/n)" | grep -iq "^y"
 }
 
-# Menü választás
 case "$chosen" in
 "Lock Screen")
-  if confirm "Biztos zárolni akarod a képernyőt?"; then
-    if command -v slock &>/dev/null; then
-      slock
-    elif command -v i3lock &>/dev/null; then
-      i3lock
-    else
-      notify-send "Lock képernyő nem található"
-    fi
-  fi
+  confirm "Biztos zárolod?" && lock
   ;;
+
 "Logout")
-  if confirm "Biztos kijelentkezel?"; then
-    logout
-  fi
+  confirm "Biztos kilépsz?" && logout
   ;;
+
 "Reboot")
-  if confirm "Biztos újra akarod indítani a rendszert?"; then
-    systemctl reboot
-  fi
+  confirm "Újraindítás?" && systemctl reboot
   ;;
+
 "Shutdown")
-  if confirm "Biztos le akarod állítani a gépet?"; then
-    systemctl poweroff
-  fi
+  confirm "Leállítás?" && systemctl poweroff
   ;;
+
 "Suspend")
-  if confirm "Biztos felfüggeszted a rendszert?"; then
-    systemctl suspend
-  fi
+  confirm "Felfüggesztés?" && systemctl suspend
   ;;
-"Cancel" | *)
+
+*)
   exit 0
   ;;
 esac

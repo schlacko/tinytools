@@ -32,10 +32,10 @@ while true; do
   # --- SZÜNET SZAKASZ ---
   if ((COMPLETED_COUNT > 0 && COMPLETED_COUNT % 4 == 0)); then
     echo "󱐋 HOSSZÚ SZÜNET 󱐋" >$STATUS_FILE
-    kitty --start-as=fullscreen --title "POMODORO_BREAK" /home/sefy/Applications/shell/i3-pomodoro/break.sh $LONG_BREAK_MINS
+    kitty --start-as=fullscreen --title "POMODORO_BREAK" /home/sefy/dotfiles/scripts/tinytools/i3-pomodoro/break.sh $LONG_BREAK_MINS
   else
     echo "󱐋 SZÜNET 󱐋" >$STATUS_FILE
-    kitty --start-as=fullscreen --title "POMODORO_BREAK" /home/sefy/Applications/shell/i3-pomodoro/break.sh $BREAK_MINS
+    kitty --start-as=fullscreen --title "POMODORO_BREAK" /home/sefy/dotfiles/scripts/tinytools/i3-pomodoro/break.sh $BREAK_MINS
   fi
   # --- AKTIVITÁS VÁRÁSA SZÜNET UTÁN ---
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Elérési utak
-POMO_SCRIPT="$HOME/Applications/shell/i3-pomodoro/main.sh"
+POMO_SCRIPT="$HOME/dotfiles/scripts/tinytools/i3-pomodoro/main.sh"
 STATUS_FILE="/tmp/pomodoro_status"
 
 # Alap Rofi parancs stílusok nélkül

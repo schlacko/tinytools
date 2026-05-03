@@ -50,7 +50,7 @@ while true; do
   # --- SZÜNET SZAKASZ ---
   if ((COMPLETED_COUNT > 0 && COMPLETED_COUNT % 4 == 0)); then
     echo "󱐋 HOSSZÚ SZÜNET 󱐋" >$STATUS_FILE
-    kitty --title "POMODORO_BREAK" /home/sefy/Applications/shell/i3-pomodoro/break.sh $LONG_BREAK_MINS
+    kitty --title "POMODORO_BREAK" /home/sefy/dotfiles/scripts/tinytools/i3-pomodoro/break.sh $LONG_BREAK_MINS
     # Sway-ben fullscreen engedélyezése
     if [ "$WM_TYPE" = "sway" ]; then
       sleep 0.5
@@ -58,7 +58,7 @@ while true; do
     fi
   else
     echo "󱐋 SZÜNET 󱐋" >$STATUS_FILE
-    kitty --title "POMODORO_BREAK" /home/sefy/Applications/shell/i3-pomodoro/break.sh $BREAK_MINS
+    kitty --title "POMODORO_BREAK" /home/sefy/dotfiles/scripts/tinytools/i3-pomodoro/break.sh $BREAK_MINS
     # Sway-ben fullscreen engedélyezése
     if [ "$WM_TYPE" = "sway" ]; then
       sleep 0.5

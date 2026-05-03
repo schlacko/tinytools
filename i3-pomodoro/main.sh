@@ -18,10 +18,9 @@ fi
 # Idle idő lekérésének függvénye
 get_idle_time() {
   if [ "$WM_TYPE" = "sway" ]; then
-    # Sway/Wayland: swaymsg segítségével
-    swaymsg -t get_seats | jq '.[] | .idle_time' | head -1
+    # Sway: swayidle-t kell használni az idle time detektálásához
+    swayidle -d | jq '.[] | .idle_time' | head -1
   else
-    # X11: xprintidle segítségével
     xprintidle
   fi
 }

@@ -6,7 +6,25 @@ BREAK_MINS=${2:-5}
 LONG_BREAK_MINS=${3:-15}
 STATUS_FILE="/tmp/pomodoro_status"
 COMPLETED_COUNT=0
-ICON="" # Győződj meg róla, hogy a Nerd Fontod látja
+ICON="" # Győződj meg róla, hogy a Nerd Fontod látja
+
+# Window manager detektálása
+if [ "$XDG_SESSION_TYPE" = "wayland" ] || [ -n "$WAYLAND_DISPLAY" ]; then
+  WM_TYPE="sway"
+else
+  WM_TYPE="x11"
+fi
+
+# Idle idő lekérésének függvénye
+get_idle_time() {
+  if [ "$WM_TYPE" = "sway" ]; then
+    # Sway/Wayland: swaymsg segítségével
+    swaymsg -t get_seats | jq '.[] | .idle_time' | head -1
+  else
+    # X11: xprintidle segítségével
+    xprintidle
+  fi
+}
 
 # Kilépésnél takarítás
 trap "echo '' > $STATUS_FILE; exit" INT TERM
@@ -32,23 +50,33 @@ while true; do
   # --- SZÜNET SZAKASZ ---
   if ((COMPLETED_COUNT > 0 && COMPLETED_COUNT % 4 == 0)); then
     echo "󱐋 HOSSZÚ SZÜNET 󱐋" >$STATUS_FILE
-    kitty --start-as=fullscreen --title "POMODORO_BREAK" /home/sefy/Applications/shell/i3-pomodoro/break.sh $LONG_BREAK_MINS
+    kitty --title "POMODORO_BREAK" /home/sefy/Applications/shell/i3-pomodoro/break.sh $LONG_BREAK_MINS
+    # Sway-ben fullscreen engedélyezése
+    if [ "$WM_TYPE" = "sway" ]; then
+      sleep 0.5
+      swaymsg '[title="POMODORO_BREAK"] fullscreen enable' 2>/dev/null || true
+    fi
   else
     echo "󱐋 SZÜNET 󱐋" >$STATUS_FILE
-    kitty --start-as=fullscreen --title "POMODORO_BREAK" /home/sefy/Applications/shell/i3-pomodoro/break.sh $BREAK_MINS
+    kitty --title "POMODORO_BREAK" /home/sefy/Applications/shell/i3-pomodoro/break.sh $BREAK_MINS
+    # Sway-ben fullscreen engedélyezése
+    if [ "$WM_TYPE" = "sway" ]; then
+      sleep 0.5
+      swaymsg '[title="POMODORO_BREAK"] fullscreen enable' 2>/dev/null || true
+    fi
   fi
   # --- AKTIVITÁS VÁRÁSA SZÜNET UTÁN ---
 
   # 1) várjuk meg, hogy a rendszer idle legyen (pl. break közben ne legyen input)
-  while [ "$(xprintidle)" -lt 2000 ]; do
+  while [ "$(get_idle_time)" -lt 2000 ]; do
     sleep 1
   done
 
   # 2) várjuk meg az első user activity-t
-  IDLE_BEFORE=$(xprintidle)
+  IDLE_BEFORE=$(get_idle_time)
 
   while true; do
-    CURRENT_IDLE=$(xprintidle)
+    CURRENT_IDLE=$(get_idle_time)
 
     # ha csökkent az idle time → volt input
     if [ "$CURRENT_IDLE" -lt "$IDLE_BEFORE" ]; then
